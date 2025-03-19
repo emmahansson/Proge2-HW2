@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <math.h>
+
+// Function prototypes
+void generateArray(double X, double eps, double A[], int *L, int index);
+void writeArrayToFile(double A[], int L);
+double getInputX();
+double getInputEpsilon();
+
+int main() {
+    double X, eps, A[15];
+    int L = 0;
+
+    // Input with validation
+    X = getInputX();
+    eps = getInputEpsilon();
+
+    // Process
+    generateArray(X, eps, A, &L, 0);
+
+    // Output
+    writeArrayToFile(A, L);
+
+    return 0;
+}
+
+// Function to get input for X with validation
+double getInputX() {
+    double X;
+    do {
+        printf("Enter X (-1 < X < 1): ");
+        scanf("%lf", &X);
+        if (X >= 1 || X <= -1) {
+            printf("Invalid input. X must be between -1 and 1. Please try again.\n");
+        }
+    } while (X >= 1 || X <= -1);
+    return X;
+}
+
+// Function to get input for epsilon with validation
+double getInputEpsilon() {
+    double eps;
+    do {
+        printf("Enter epsilon (0 < epsilon < 1): ");
+        scanf("%lf", &eps);
+        if (eps >= 1 || eps <= 0) {
+            printf("Invalid input. Epsilon must be between 0 and 1. Please try again.\n");
+        }
+    } while (eps >= 1 || eps <= 0);
+    return eps;
+}
+
+// Recursive function to generate the array
+void generateArray(double X, double eps, double A[], int *L, int index) {
+    if (index == 0) {
+        A[0] = X;
+        (*L)++;
+        generateArray(X, eps, A, L, 1);
+        return;
+    }
+
+    // Calculate the element
+    A[index] = (index % 2 == 0 ? 1 : -1) * A[0]; // A[0] is X, alternate sign
+    double numerator = 1.0, denominator = 1.0;
+    for (int i = 1; i < index; i++) {
+        numerator *= (2.0 * i - 1.0);
+        denominator *= (2.0 * i);
+    }
+    double x_power = 1.0;
+    for (int i = 0; i < 2 * index - 1; i++) {
+        x_power *= X;
+    }
+
+    A[index] *= (numerator / denominator) * x_power / (2 * index - 1);
+
+    if (fabs(A[index] - A[index - 1]) <= eps || index == 14) {
+        *L = index;
+        return;
+    }
+
+    generateArray(X, eps, A, L, index + 1);
+}
+
+// Function to write the array to a file
+void writeArrayToFile(double A[], int L) {
+    FILE *file = fopen("F.txt", "w");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    fprintf(file, "%d\n", L + 1); // Number of elements
+    for (int i = 0; i <= L; i++) {
+        fprintf(file, "A[%d] = %lf\n", i, A[i]);
+    }
+
+    fclose(file);
+}
