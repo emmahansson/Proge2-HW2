@@ -2,8 +2,8 @@
 #include <math.h>
 
 // Function prototypes
-void generateArray(double X, double eps, double A[], int *L, int index);
-void writeArrayToFile(double A[], int L);
+void generateArray(double X, double, double [], int *, int);
+void writeArrayToFile(double [], int);
 double getInputX();
 double getInputEpsilon();
 
