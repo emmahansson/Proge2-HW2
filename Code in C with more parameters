@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h> // For dynamic memory allocation
+
+// Function prototypes with at least one parameter
+double* generateArray(double, double, int *, void*);
+void writeArrayToFile(const double *, int, const char *, void*);
+double getInputX(void*);
+double getInputEpsilon(void*);
+void generateArrayRecursive(double, double, double [], int *, int, void*);
+
+int main() {
+    double X, eps, *A;
+    int L = 0;
+    void* unused = NULL; 
+
+    // Input with validation
+    X = getInputX(unused);
+    eps = getInputEpsilon(unused);
+
+    // Process
+    A = generateArray(X, eps, &L, unused);
+
+    // Output
+    if (A != NULL) {
+        writeArrayToFile(A, L, "F.txt", unused);
+        free(A); 
+    }
+
+    return 0;
+}
+
+// Function to get input for X with validation
+double getInputX(void* dummy) {
+    double X;
+    do {
+        printf("Enter X (-1 < X < 1): ");
+        scanf("%lf", &X);
+        if (X >= 1 || X <= -1) {
+            printf("Invalid input. X must be between -1 and 1. Please try again.\n");
+        }
+    } while (X >= 1 || X <= -1);
+    return X;
+}
+
+// Function to get input for epsilon with validation
+double getInputEpsilon(void* dummy) {
+    double eps;
+    do {
+        printf("Enter epsilon (0 < epsilon < 1): ");
+        scanf("%lf", &eps);
+        if (eps >= 1 || eps <= 0) {
+            printf("Invalid input. Epsilon must be between 0 and 1. Please try again.\n");
+        }
+    } while (eps >= 1 || eps <= 0);
+    return eps;
+}
+
+// Recursive function to generate the array
+double* generateArray(double x, double eps, int *l, void* dummy) {
+    double *a = (double*)malloc(15 * sizeof(double));
+    if (a == NULL) {
+        printf("Memory allocation failed!\n");
+        *l = 0;
+        return NULL;
+    }
+    *l = 0;
+    generateArrayRecursive(x, eps, a, l, 0, dummy);
+    return a;
+}
+
+// Helper recursive function
+void generateArrayRecursive(double x, double eps, double a[], int *l, int index, void* dummy) {
+    if (index == 0) {
+        a[0] = x;
+        (*l)++;
+        generateArrayRecursive(x, eps, a, l, 1, dummy);
+        return;
+    }
+
+    // Calculate the element
+    a[index] = (index % 2 == 0 ? 1 : -1) * a[0]; 
+    double numerator = 1.0, denominator = 1.0;
+    for (int i = 1; i < index; i++) {
+        numerator *= (2.0 * i - 1.0);
+        denominator *= (2.0 * i);
+    }
+    double x_power = 1.0;
+    for (int i = 0; i < 2 * index - 1; i++) {
+        x_power *= x;
+    }
+
+    a[index] *= (numerator / denominator) * x_power / (2 * index - 1);
+
+    if (fabs(a[index] - a[index - 1]) <= eps || index == 14) {
+        *l = index;
+        return;
+    }
+
+    generateArrayRecursive(x, eps, a, l, index + 1, dummy);
+}
+
+// Function to write the array to a file
+void writeArrayToFile(const double *a, int l, const char *filename, void* dummy) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    fprintf(file, "%d\n", l + 1); 
+    for (int i = 0; i <= l; i++) {
+        fprintf(file, "A[%d] = %lf\n", i, a[i]);
+    }
+
+    fclose(file);
+}
